@@ -10,7 +10,7 @@ services
     memory.py
     scraper.py
 static
-    chatbot.js
+    script.js
     index.html
     styles.css
 venv

@@ -1,13 +1,27 @@
 import os
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from services.scraper import scrape_website
 from services.gemini_api import get_gemini_response
 from services.memory import ConversationMemory
 from models.schemas import ChatRequest, ChatResponse
 
 # ✅ Initialize FastAPI
-app = FastAPI(title="Floating Chatbot", version="1.0")
+app = FastAPI(title="Floating Chatbot", version="1.1")
+
+# ✅ Serve static files (Frontend)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# ✅ Enable CORS (Fix frontend fetch issues)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 🔥 Change to your domain in production (e.g., ["https://yourcompany.com"])
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ✅ Set website URL
 WEBSITE_URL = "https://alphaesai.com"
@@ -47,13 +61,18 @@ async def chat(request: ChatRequest):
     # Get previous conversation context
     chat_history = conversation_memory.get_summary()
 
-    # Get AI response using Gemini API
-    response = get_gemini_response(user_message, chat_history, app.state.website_data)
-
-    # Store the conversation in memory
-    conversation_memory.add_message(user_message, response)
-
-    return {"response": response}
+    try:
+        # Get AI response using Gemini API
+        response = get_gemini_response(user_message, chat_history, app.state.website_data)
+        
+        # Store the conversation in memory
+        conversation_memory.add_message(user_message, response)
+        
+        return {"response": response}
+    
+    except Exception as e:
+        print(f"⚠️ Error processing chatbot request: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error. Please try again later.")
 
 # ✅ Run the server on the correct Railway port
 if __name__ == "__main__":
