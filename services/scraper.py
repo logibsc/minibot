@@ -1,9 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_website(url):
+def scrape_website(url):  # Ensure 'url' parameter is included
     """Fetches and extracts text content from the given website URL."""
-    
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise an error for bad status codes
