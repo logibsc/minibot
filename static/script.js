@@ -1,32 +1,55 @@
-const API_URL = "https://minibot-production.up.railway.app/chat";  // ✅ Update with your backend URL
+document.addEventListener("DOMContentLoaded", function () {
+    const chatContainer = document.getElementById("chatContainer");
+    const chatBody = document.getElementById("chatBody");
+    const userInput = document.getElementById("userInput");
 
-async function sendMessage() {
-    let inputField = document.getElementById('userInput');
-    let message = inputField.value.trim();
-    if (!message) return;
+    // ✅ Toggle Chat Window
+    window.toggleChat = function () {
+        chatContainer.classList.toggle("open");
+    };
 
-    let chatBody = document.getElementById('chatBody');
-    chatBody.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
-    inputField.value = '';
+    // ✅ Handle Enter Key Press
+    window.handleKeyPress = function (event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    };
 
-    try {
-        let response = await fetch(API_URL, {  // ✅ Use full API URL
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
-        });
-        let data = await response.json();
-        chatBody.innerHTML += `<div><strong>Bot:</strong> ${data.response}</div>`;
-    } catch (error) {
-        chatBody.innerHTML += `<div><strong>Bot:</strong> Error connecting to chatbot.</div>`;
+    // ✅ Send Message to Chatbot
+    window.sendMessage = async function () {
+        const userMessage = userInput.value.trim();
+        if (userMessage === "") return;
+
+        // Add user message to chat
+        addMessage("You", userMessage);
+        userInput.value = "";
+
+        try {
+            const response = await fetch("https://minibot-production.up.railway.app/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userMessage }),
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch response");
+            const data = await response.json();
+            addMessage("Bot", data.response);
+        } catch (error) {
+            addMessage("Bot", "Error connecting to chatbot.");
+        }
+
+        // ✅ Scroll to latest message
+        chatBody.scrollTop = chatBody.scrollHeight;
+    };
+
+    // ✅ Add Message to Chat Window
+    function addMessage(sender, text) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender.toLowerCase());
+        messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        chatBody.appendChild(messageDiv);
+
+        // ✅ Auto-scroll to latest message
+        chatBody.scrollTop = chatBody.scrollHeight;
     }
-}
-
-function toggleChat() {
-    let chatBox = document.getElementById("chatContainer");
-    if (chatBox.style.display === "none" || chatBox.style.display === "") {
-        chatBox.style.display = "block";
-    } else {
-        chatBox.style.display = "none";
-    }
-}
+});
