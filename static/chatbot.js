@@ -1,16 +1,16 @@
-async function sendMessage() {
-    let userMessage = document.getElementById("userInput").value;
-    if (!userMessage) return;
+async function sendMessage(userMessage) {
+    const responseBox = document.getElementById("chat-response");
 
-    let chatbox = document.getElementById("chatbox");
-    chatbox.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+    try {
+        let response = await fetch("http://127.0.0.1:8000/chat", {  // LOCAL API
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMessage })
+        });
 
-    let response = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage })
-    });
-
-    let data = await response.json();
-    chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+        let data = await response.json();
+        responseBox.innerHTML += `<div class="bot-message">${data.response}</div>`;
+    } catch (error) {
+        responseBox.innerHTML += `<div class="bot-message error">Error fetching response</div>`;
+    }
 }
