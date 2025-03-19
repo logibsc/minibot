@@ -16,11 +16,12 @@ def get_gemini_response(user_message, chat_history, website_data):
         return "Please provide a valid input."
 
     prompt = (
-        f"You are an AI chatbot for the website 'https://alphaesai.com'. "
+        f"You are Alpha Bot, an AI chatbot for 'https://alphaesai.com'. "
+        f"Your goal is to provide friendly and informative responses.\n\n"
         f"Here is the latest website content:\n{website_data}\n\n"
-        f"Answer the user's question based on this information.\n\n"
+        f"Use this information to answer user queries naturally.\n\n"
         f"User: {user_message}\n\n"
-        f"Answer:"
+        f"Alpha Bot:"
     )
 
     try:

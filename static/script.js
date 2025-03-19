@@ -3,53 +3,45 @@ document.addEventListener("DOMContentLoaded", function () {
     const chatBody = document.getElementById("chatBody");
     const userInput = document.getElementById("userInput");
 
-    // ✅ Toggle Chat Window
     window.toggleChat = function () {
-        chatContainer.classList.toggle("open");
+        chatContainer.style.display = chatContainer.style.display === "flex" ? "none" : "flex";
     };
 
-    // ✅ Handle Enter Key Press
+    window.sendMessage = function () {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, "user-message");
+        userInput.value = "";
+
+        fetch("https://minibot-production.up.railway.app/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const botReply = data.response || "Sorry, I didn't understand that.";
+            addMessage(botReply, "bot-message");
+        })
+        .catch(() => {
+            addMessage("Error connecting to chatbot.", "bot-message");
+        });
+    };
+
     window.handleKeyPress = function (event) {
         if (event.key === "Enter") {
             sendMessage();
         }
     };
 
-    // ✅ Send Message to Chatbot
-    window.sendMessage = async function () {
-        const userMessage = userInput.value.trim();
-        if (userMessage === "") return;
-
-        // Add user message to chat
-        addMessage("You", userMessage);
-        userInput.value = "";
-
-        try {
-            const response = await fetch("https://minibot-production.up.railway.app/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMessage }),
-            });
-
-            if (!response.ok) throw new Error("Failed to fetch response");
-            const data = await response.json();
-            addMessage("Bot", data.response);
-        } catch (error) {
-            addMessage("Bot", "Error connecting to chatbot.");
-        }
-
-        // ✅ Scroll to latest message
-        chatBody.scrollTop = chatBody.scrollHeight;
-    };
-
-    // ✅ Add Message to Chat Window
-    function addMessage(sender, text) {
+    function addMessage(text, className) {
         const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", sender.toLowerCase());
-        messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        messageDiv.classList.add("message", className);
+        messageDiv.textContent = text;
         chatBody.appendChild(messageDiv);
-
-        // ✅ Auto-scroll to latest message
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 });
